@@ -149,7 +149,11 @@ lighter.service = function (name, Constructor) {
     }
 
     var instance = definition.instance;
-    return instance || lighter.create(definition.constructor);
+    if (!instance) {
+      instance = lighter.create(definition.constructor);
+      definition.instance = instance;
+    }
+    return instance;
   }
 
   services[name] = {
