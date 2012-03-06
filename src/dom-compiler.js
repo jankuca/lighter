@@ -50,7 +50,6 @@ lighter.DOMCompiler.compileTextNode = function (text) {
   // Insert a SPAN element with a lt:bind attribute after the original node
   var element = document.createElement('span');
   element.setAttribute('lt:bind', exp);
-  element.textContent = '[BINDING]';
   target.insertBefore(element, text.nextSibling);
 
   // Get remaining text
