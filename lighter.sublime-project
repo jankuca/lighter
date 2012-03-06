@@ -1,0 +1,30 @@
+{
+  "folders": [
+    {
+      "path": "build",
+      "name": "Building"
+    },
+    {
+      "path": "src",
+      "name": "Source"
+    },
+    {
+      "path": "test",
+      "name": "Tests"
+    }
+  ],
+
+  "settings": {
+    "tab_size": 2,
+    "translate_tabs_to_spaces": true,
+    "word_wrap": true,
+    "wrap_width": 80
+  },
+
+  "build_systems": [
+    {
+      "name": "Lint",
+      "cmd": [ "bash", "$project_path/build/lint.sh", "$project_path" ]
+    }
+  ]
+}
