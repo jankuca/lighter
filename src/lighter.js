@@ -271,7 +271,7 @@ lighter.registerNativeWidgets_ = function () {
   });
 
   lighter.widget('@lt:bind', function (element, exp, scope) {
-    var state = '';
+    var state = element.textContent;
     var update = function () {
       var value = lighter.ExpressionCompiler.get(exp, scope);
       if (typeof value === 'undefined' || value === null) {
