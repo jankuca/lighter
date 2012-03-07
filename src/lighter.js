@@ -10,6 +10,13 @@ goog.require('lighter.Scope');
 goog.require('lighter.ViewAttributeWidget');
 
 
+
+/**
+ * @type {Array.<string>}
+ */
+Function.prototype.$deps = [];
+
+
 /**
  * Whether the app is running
  * @type {boolean}
@@ -117,7 +124,10 @@ lighter.compile = function (dom, include_root) {
  * @return {Object} An instance (either the original one or a new one).
  */
 lighter.create = function (Constructor, instance) {
-  var deps = lighter.getServices_.apply(null, Constructor.$deps);
+  var deps = [];
+  if (Constructor.prototype.$deps) {
+    deps = lighter.getServices_.apply(null, Constructor.prototype.$deps);
+  }
 
   if (instance) {
     return Constructor.apply(instance, deps) || instance;
