@@ -18,9 +18,15 @@ lighter.Scope = function (root) {
 
   /**
    * An {Array} of widgets bound directly to the scope
-   * @type {Array.<!Object>}
+   * @type {!Array.<!Object>}
    */
   this.$$widgets = [];
+
+  /**
+   * An eventual parent {lighter.Scope} instance from which this one inherits
+   * @type {lighter.Scope}
+   */
+  this.$$parent = null;
 };
 
 /**

@@ -85,6 +85,7 @@ lighter.scope = function (element, parent) {
     scope = new lighter.Scope(element);
   } else {
     scope = /** @type {!lighter.Scope} */ Object.create(parent);
+    scope.$$parent = parent;
     lighter.Scope.call(scope, element);
   }
 
