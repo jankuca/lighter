@@ -30,4 +30,13 @@ lighter.ControllerAttributeWidget = function (root, Controller, scope) {
 
   var template = lighter.compile(root);
   template(controller_scope);
+
+  this.scope = controller_scope;
+};
+
+/**
+ * Updates the controlled scope
+ */
+lighter.ControllerAttributeWidget.prototype.update = function () {
+  this.scope.$update();
 };

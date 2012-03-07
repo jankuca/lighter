@@ -6,6 +6,7 @@ goog.require('lighter.ControllerAttributeWidget');
 goog.require('lighter.DOMCompiler');
 goog.require('lighter.ExpressionCompiler');
 goog.require('lighter.RepeaterAttributeWidget');
+goog.require('lighter.RouterService');
 goog.require('lighter.Scope');
 goog.require('lighter.ViewAttributeWidget');
 
@@ -312,6 +313,12 @@ lighter.getWidgetPlaceholdersFromDOM_ = function (dom, include_root) {
   return placeholders;
 };
 
+
+
+// Register the native service factories
+lighter.service('$router', function () {
+  return new lighter.RouterService(goog.global.location, goog.global.history);
+});
 
 
 // Register the native widget factories
