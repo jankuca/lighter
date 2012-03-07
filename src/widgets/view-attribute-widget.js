@@ -36,6 +36,7 @@ lighter.ViewAttributeWidget.prototype.update = function () {
   var builder = /** @type {?function(Object=): string} */ this.scope[this.key];
 
   if (builder !== this.builder) {
+    this.builder = builder;
     this.render(builder);
   }
 };
@@ -61,9 +62,14 @@ lighter.ViewAttributeWidget.prototype.render = function (builder) {
     var template = lighter.compile(temp);
     // Initialize the template
     template(this.scope);
-    // Move the DOM to the root widget element
-    Array.prototype.forEach.call(temp.childNodes, function (node) {
-      container.appendChild(node);
+    // Remove the temporary div from the DOM tree
+    document.body.removeChild(temp);
+    // Create a document fragment in which we're going to copy temp's children
+    var frag = document.createDocumentFragment();
+    Array.prototype.slice.call(temp.childNodes).forEach(function (node) {
+      frag.appendChild(node);
     });
+    // Move the DOM to the root widget element
+    container.appendChild(frag);
   }
 };
