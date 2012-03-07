@@ -13,6 +13,7 @@ lighter.events.LISTENER_LIMIT = 10;
 
 
 /**
+ * @constructor
  * @this {!Object}
  */
 lighter.events.EventEmitter = function () {
