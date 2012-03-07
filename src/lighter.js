@@ -60,8 +60,6 @@ lighter.bootstrap = function (root_element) {
     throw new Error('The application is already running.');
   }
 
-  lighter.registerNativeWidgets_();
-
   var root_scope = lighter.scope(root_element);
   var template = lighter.compile(root_element, true);
   template(root_scope);
@@ -251,65 +249,6 @@ lighter.getServices_ = function (args) {
 };
 
 /**
- * Registeres the native widget factories
- * @private
- */
-lighter.registerNativeWidgets_ = function () {
-  lighter.widget('@lt:controller', function (root, name, scope) {
-    // Lookup the controller in the global object
-    var controller = lighter.ExpressionCompiler.get(name, window);
-    if (!controller) {
-      throw new Error('Undefined controller: ' + name);
-    }
-    if (typeof controller !== 'function') {
-      throw new Error('Invalid controller: ' + name);
-    }
-
-    return new lighter.ControllerAttributeWidget(root, controller, scope);
-  });
-
-
-  lighter.widget('@lt:view', function (container, key, scope) {
-    return new lighter.ViewAttributeWidget(container, scope, key);
-  });
-
-  lighter.widget('@lt:repeat', function (container, exp, scope) {
-    var keys = lighter.ExpressionCompiler.parseKeyLoopExpression(exp);
-
-    return new lighter.RepeaterAttributeWidget(
-      container, scope, keys.source, keys.target);
-  });
-
-  lighter.widget('@lt:bind', function (element, exp, scope) {
-    var state = element.textContent;
-    var update = function () {
-      var value = lighter.ExpressionCompiler.get(exp, scope);
-      if (typeof value === 'undefined' || value === null) {
-        value = '';
-      }
-      if (state !== value) {
-        element.textContent = value;
-        state = value;
-      }
-    };
-
-    update();
-
-    return {
-      update: update
-    };
-  });
-
-  lighter.widget('@lt:click', function (element, exp, scope) {
-    element.onclick = function () {
-      var fn = lighter.ExpressionCompiler.compile(exp, scope);
-      fn();
-      scope.$update();
-    };
-  });
-};
-
-/**
  * Returns an {Array} of widget root elements in the given DOM ({Element})
  * @private
  * @param {Element} dom The DOM element in which to look for widgets.
@@ -371,3 +310,59 @@ lighter.getWidgetPlaceholdersFromDOM_ = function (dom, include_root) {
 
   return placeholders;
 };
+
+
+
+// Register the native widget factories
+lighter.widget('@lt:controller', function (root, name, scope) {
+  // Lookup the controller in the global object
+  var controller = lighter.ExpressionCompiler.get(name, window);
+  if (!controller) {
+    throw new Error('Undefined controller: ' + name);
+  }
+  if (typeof controller !== 'function') {
+    throw new Error('Invalid controller: ' + name);
+  }
+
+  return new lighter.ControllerAttributeWidget(root, controller, scope);
+});
+
+
+lighter.widget('@lt:view', function (container, key, scope) {
+  return new lighter.ViewAttributeWidget(container, scope, key);
+});
+
+lighter.widget('@lt:repeat', function (container, exp, scope) {
+  var keys = lighter.ExpressionCompiler.parseKeyLoopExpression(exp);
+
+  return new lighter.RepeaterAttributeWidget(
+    container, scope, keys.source, keys.target);
+});
+
+lighter.widget('@lt:bind', function (element, exp, scope) {
+  var state = element.textContent;
+  var update = function () {
+    var value = lighter.ExpressionCompiler.get(exp, scope);
+    if (typeof value === 'undefined' || value === null) {
+      value = '';
+    }
+    if (state !== value) {
+      element.textContent = value;
+      state = value;
+    }
+  };
+
+  update();
+
+  return {
+    update: update
+  };
+});
+
+lighter.widget('@lt:click', function (element, exp, scope) {
+  element.onclick = function () {
+    var fn = lighter.ExpressionCompiler.compile(exp, scope);
+    fn();
+    scope.$update();
+  };
+});
