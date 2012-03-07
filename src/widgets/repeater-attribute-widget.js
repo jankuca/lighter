@@ -39,11 +39,13 @@ lighter.RepeaterAttributeWidget.prototype.init_ = function () {
 
   container.innerHTML = '';
 
-  items.forEach(function (item) {
-    var repeater_scope = this.createItem_(item);
-    container.appendChild(repeater_scope.$$root);
-    state.push([ item, repeater_scope ]);
-  }, this);
+  if (items) {
+    items.forEach(function (item) {
+      var repeater_scope = this.createItem_(item);
+      container.appendChild(repeater_scope.$$root);
+      state.push([ item, repeater_scope ]);
+    }, this);
+  }
 
   this.state = state;
   this.items_ = items;
@@ -83,6 +85,9 @@ lighter.RepeaterAttributeWidget.prototype.update = function () {
 
   if (items !== this.items_) {
     this.init_();
+    return;
+  }
+  if (!items) {
     return;
   }
 
