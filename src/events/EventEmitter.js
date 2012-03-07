@@ -13,13 +13,13 @@ lighter.events.LISTENER_LIMIT = 10;
 
 
 /**
- * @constructor
+ * @this {!Object}
  */
 lighter.events.EventEmitter = function () {
   /**
    * Event listener storage
    * @type {Object.<string, Array.<{
-   *   listener: function(*): ?boolean,
+   *   listener: (function(): ?boolean | function(*): ?boolean),
    *   ctx: ?Object,
    *   once: boolean
    * }>>}
@@ -37,7 +37,7 @@ lighter.events.EventEmitter = function () {
 /**
  * Adds a new event listener
  * @param {string} type The event type to which to subscribe.
- * @param {function(lighter.events.Event=): ?boolean} fn The listener.
+ * @param {function(): ?boolean | function(*): ?boolean} fn The listener.
  * @param {?Object=} ctx The object in whose context to execute the listener.
  * @param {boolean=} once Whether to unsubscribe after one event.
  */
@@ -61,7 +61,7 @@ lighter.events.EventEmitter.prototype.on = function (type, fn, ctx, once) {
 /**
  * Adds a new event listener
  * @param {string} type The event type to which to subscribe.
- * @param {function(lighter.events.Event=): ?boolean} fn The listener.
+ * @param {function(): ?boolean | function(*): ?boolean} fn The listener.
  * @param {?Object=} ctx The object in whose context to execute the listener.
  */
 lighter.events.EventEmitter.prototype.once = function (type, fn, ctx) {
@@ -71,7 +71,7 @@ lighter.events.EventEmitter.prototype.once = function (type, fn, ctx) {
 /**
  * Removes the given event listener (or all if not specified)
  * @param {string} type The event type from which to unsubscribe
- * @param {(function(*): ?boolean)=} fn The listener.
+ * @param {function(): ?boolean | function(*): ?boolean} fn The listener.
  */
 lighter.events.EventEmitter.prototype.off = function (type, fn) {
   var listeners = this.$$event_listeners_[type] || [];
@@ -86,7 +86,7 @@ lighter.events.EventEmitter.prototype.off = function (type, fn) {
 /**
  * Emits an event of the given type
  * @param {string} type The event type
- * @param {*} data
+ * @param {*=} data
  */
 lighter.events.EventEmitter.prototype.emit = function (type, data) {
   var listeners = this.$$event_listeners_[type];

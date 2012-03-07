@@ -23,7 +23,7 @@ lighter.ViewAttributeWidget = function (container, scope, key) {
  * @private
  */
 lighter.ViewAttributeWidget.prototype.init_ = function () {
-  var builder = /** @type {?function(): string} */ this.scope[this.key];
+  var builder = /** @type {?function(Object=): string} */ this.scope[this.key];
   this.builder = builder;
 
   this.render(builder);
@@ -33,7 +33,7 @@ lighter.ViewAttributeWidget.prototype.init_ = function () {
  * Updates the widget
  */
 lighter.ViewAttributeWidget.prototype.update = function () {
-  var builder = /** @type {?function(): string} */ this.scope[this.key];
+  var builder = /** @type {?function(Object=): string} */ this.scope[this.key];
 
   if (builder !== this.builder) {
     this.render(builder);
@@ -42,7 +42,7 @@ lighter.ViewAttributeWidget.prototype.update = function () {
 
 /**
  * Rerenders the widget container based on the current scope state
- * @param {function(Object): string} builder A template builder function.
+ * @param {?function(Object=): string} builder A template builder function.
  */
 lighter.ViewAttributeWidget.prototype.render = function (builder) {
   var container = this.container;

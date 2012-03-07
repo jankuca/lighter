@@ -49,7 +49,8 @@ lighter.Scope.prototype.$update = function () {
  * the scope object on each received event.
  * @param {!Object} source The object to whose events to subscribe.
  * @param {string} type The event type to which to subscribe.
- * @param {?function(*): ?boolean=} fn A listener function to call.
+ * @param {?(function(): ?boolean | function(*): ?boolean)=} fn
+ *   A listener function to call.
  * @param {boolean=} once Whether to unsubscribe after one event.
  */
 lighter.Scope.prototype.$watch = function (source, type, fn, once) {
