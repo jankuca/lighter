@@ -121,12 +121,17 @@ lighter.compile = function (dom, include_root) {
  * the constructor is invoked in context of the instance.
  * @param {!Function} Constructor The constructor function in which to inject.
  * @param {Object=} instance The (optional) instance to use for the invocation.
+ * @param {...Object} args The arguments to pass to the constructor after deps.
  * @return {Object} An instance (either the original one or a new one).
  */
-lighter.create = function (Constructor, instance) {
+lighter.create = function (Constructor, instance, args) {
   var deps = [];
   if (Constructor.prototype.$deps) {
     deps = lighter.getServices_.apply(null, Constructor.prototype.$deps);
+  }
+
+  if (arguments.length > 2) {
+    deps = deps.concat(Array.prototype.slice.call(arguments, 2));
   }
 
   if (instance) {
