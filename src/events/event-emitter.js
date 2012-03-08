@@ -53,7 +53,7 @@ lighter.events.EventEmitter.prototype.on = function (type, fn, ctx, once) {
 
   listeners.push({
     listener: fn,
-    ctx: ctx || null,
+    ctx: ctx || this,
     once: once
   });
 
