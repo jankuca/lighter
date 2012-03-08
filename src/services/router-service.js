@@ -89,6 +89,11 @@ lighter.RouterService.prototype.getState_ = function (pathname, params) {
     search = search ? '?' + search : '';
   }
 
+  if (pathname[0] !== '/') {
+    pathname = this.current_pathname_ + '/' + pathname;
+    pathname = pathname.substr(this.root_.length);
+  }
+
   return {
     'path': pathname + search,
     'pathname': pathname,
@@ -103,7 +108,7 @@ lighter.RouterService.prototype.getState_ = function (pathname, params) {
  */
 lighter.RouterService.prototype.snap_ = function () {
   var location = this.location_;
-  this.current_pathname_ = location.pathname;
+  this.current_pathname_ = location.pathname.replace(/\/$/, '');
 
   var params = {};
   var search = location.search ? location.search.substr(1) : '';
