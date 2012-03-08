@@ -31,6 +31,7 @@ lighter.events.EventEmitter = function () {
   // Mixin the EventEmitter prototype methods into the host object
   this.on = lighter.events.EventEmitter.prototype.on;
   this.once = lighter.events.EventEmitter.prototype.once;
+  this.pipe = lighter.events.EventEmitter.prototype.pipe;
   this.off = lighter.events.EventEmitter.prototype.off;
   this.emit = lighter.events.EventEmitter.prototype.emit;
 };
@@ -67,6 +68,12 @@ lighter.events.EventEmitter.prototype.on = function (type, fn, ctx, once) {
  */
 lighter.events.EventEmitter.prototype.once = function (type, fn, ctx) {
   this.on(type, fn, ctx, true);
+};
+
+lighter.events.EventEmitter.prototype.pipe = function (type, target) {
+  this.on(type, function (data) {
+    target.emit(type, data);
+  });
 };
 
 /**
