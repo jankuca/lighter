@@ -71,7 +71,10 @@ lighter.RouterService.prototype.go = function (pathname, params) {
     path = this.root_ + pathname;
   }
 
-  this.history_.pushState(state, '', path);
+  if (path !== this.location_.pathname + this.location_.search) {
+    // Do not push the same state to the stack twice in a row
+    this.history_.pushState(state, '', path);
+  }
   this.emit('location', pathname);
 };
 
