@@ -322,7 +322,8 @@ lighter.getWidgetPlaceholdersFromDOM_ = function (dom, include_root) {
 
 // Register the native service factories
 lighter.service('$router', function () {
-  return new lighter.RouterService(goog.global.location, goog.global.history);
+  return lighter.create(lighter.RouterService, null,
+    goog.global.location, goog.global.history);
 });
 
 
