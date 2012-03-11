@@ -9,8 +9,8 @@ goog.require('lighter.events.EventEmitter');
  * Manages the user's location within the app
  * @constructor
  * @extends {lighter.events.EventEmitter}
- * @param {Location} location The location object to use
- * @param {History} history The history object to use
+ * @param {!Location} location The location object to use
+ * @param {!History} history The history object to use
  */
 lighter.RouterService = function (location, history) {
   lighter.events.EventEmitter.call(this);
