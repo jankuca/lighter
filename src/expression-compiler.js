@@ -108,7 +108,8 @@ lighter.ExpressionCompiler.compile = function (exp, scope) {
  * - If there is not the complete property chain present in the scope,
  *   {undefined} is returned.
  * @param {string} exp The getter expression to parse.
- * @param {Object} scope The scope in which to look for the value.
+ * @param {!lighter.Scope|Window} scope The scope in which to look for
+ *   the value. This can also be a {Window} object for global look-ups.
  * @return {*} The value from the given scope.
  */
 lighter.ExpressionCompiler.get = function (exp, scope) {
