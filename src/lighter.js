@@ -373,6 +373,42 @@ lighter.widget('@lt:bind', function (element, exp, scope) {
   };
 });
 
+lighter.widget('@name', function (element, exp, scope) {
+  if ([ 'INPUT', 'TEXTAREA', 'SELECT' ].indexOf(element.tagName) !== -1) {
+    var state = element.value;
+    var update = function () {
+      var value = lighter.ExpressionCompiler.get(exp, scope);
+      if (typeof value === 'undefined' || value === null) {
+        value = '';
+      }
+      if (state !== value) {
+        element.value = value;
+        state = value;
+      }
+    };
+
+    lighter.ExpressionCompiler.set(exp, element.value, scope);
+    update();
+
+    element.addEventListener('keypress', function (e) {
+      // Run this asynchronously to have the correct value of element.value
+      setTimeout(function () {
+        var value = element.value;
+        state = lighter.ExpressionCompiler.get(exp, scope);
+        if (value !== state) {
+          lighter.ExpressionCompiler.set(exp, value, scope);
+          state = value;
+        }
+      }, 0);
+    }, false);
+
+    return {
+      update: update
+    };
+  }
+  return null;
+});
+
 lighter.widget('@lt:click', function (element, exp, scope) {
   element.onclick = function () {
     var fn = lighter.ExpressionCompiler.compile(exp, scope);
