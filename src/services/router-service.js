@@ -18,16 +18,15 @@ lighter.RouterService = function (location, history) {
   this.location_ = location;
   this.history_ = history;
   this.root_ = '';
+  this.routes_ = [];
   this.current_params_ = {};
-
-  this.snap_();
 
   var self = this;
   window.onpopstate = function (e) {
     var state = e.state;
     if (state) {
       self.snap_();
-      self.emit('location', state['pathname']);
+      self.emitLocation(state['pathname']);
     }
   };
 };
@@ -48,6 +47,44 @@ lighter.RouterService.prototype.root = function (root) {
   }
   this.root_ = root;
   return null;
+};
+
+/**
+ * Sets the route handlers
+ * The given pattern-to-handler map is expanded to include prepared patterns
+ * used in the route matching process and stored as an {Array}.
+ * @param {!Object.<string, function(): string>} handlers New routes handlers.
+ */
+lighter.RouterService.prototype.routes = function (handlers) {
+  var routes = [];
+
+  Object.keys(handlers).forEach(function (blank) {
+    var source = blank;
+    // Replace conditional parameters like :id<\d+> with the condition
+    source = source.replace(/:[\w\-]+<([^>]+)>/g, function (match) {
+      return '(' + match.split('<')[1].split('>')[0] + ')';
+    });
+    // Replace general parameters like :id
+    source = source.replace(/:[\w\-]+/g, '([^\\/]+)');
+
+    var pattern = new RegExp('^' + source + '$');
+
+    var keys = blank.match(/:[\w\-]+/g) || [];
+    keys = keys.map(function (match) {
+      return match.substr(1);
+    });
+
+    routes.push({
+      blank: blank,
+      pattern: pattern,
+      keys: keys,
+      handler: handlers[blank]
+    })
+  });
+
+  this.routes_ = routes;
+
+  this.snap_();
 };
 
 /**
@@ -74,15 +111,56 @@ lighter.RouterService.prototype.go = function (pathname, params) {
   var path = state['path'];
   if (path[0] === '/') {
     // Absolute pathnames are relative to the set root
-    path = this.root_ + pathname;
+    path = this.root_ + path;
   }
 
   if (path !== this.location_.pathname + this.location_.search) {
     // Do not push the same state to the stack twice in a row
     this.history_.pushState(state, '', path);
+  } else {
+    this.history_.replaceState(state, '', path);
   }
-  this.emit('location', pathname);
+  this.emitLocation(pathname);
 };
+
+/**
+ * Emits a "location" event
+ * @param {string} pathname The pathname to emit.
+ */
+lighter.RouterService.prototype.emitLocation = function (pathname) {
+  var route = this.getRouteByPathname_(pathname);
+
+  this.emit('location', {
+    pathname: pathname,
+    params: route.params,
+    handler: route ? route.handler : null
+  });
+};
+
+/**
+ * Goes one step back in the history.
+ */
+lighter.RouterService.prototype.back = function () {
+  var history = this.history_;
+  history.back();
+};
+
+/**
+ * Goes one step forward in the history.
+ */
+lighter.RouterService.prototype.forward = function () {
+  var history = this.history_;
+  history.forward();
+};
+
+/**
+ * Returns the current pathname relative to the root
+ * @return {string} The current pathname.
+ */
+lighter.RouterService.prototype.getCurrentPathname = function () {
+  return this.current_pathname_.substr(this.root_.length) || '/';
+};
+
 
 /**
  * Returns a state object for the given pathname and params
@@ -106,10 +184,35 @@ lighter.RouterService.prototype.getState_ = function (pathname, params) {
   return {
     'path': pathname + search,
     'pathname': pathname,
-    'query': params
+    'query': params || {}
   };
 };
 
+/**
+ * Gets a route by a pathname
+ */
+lighter.RouterService.prototype.getRouteByPathname_ = function (pathname) {
+  var routes = this.routes_;
+
+  for (var i = 0, ii = routes.length; i < ii; ++i) {
+    var route = routes[i];
+    var match = pathname.match(route.pattern);
+    if (match) {
+      var param_keys = route.keys;
+      var params = {};
+      param_keys.forEach(function (key, i) {
+        params[key] = match[i + 1];
+        pathname = pathname.replace(':' + key, match[i + 1]);
+      });
+
+      return {
+        pathname: pathname,
+        handler: route.handler,
+        params: params
+      };
+    }
+  }
+};
 
 /**
  * Snaps the current location state
@@ -128,5 +231,13 @@ lighter.RouterService.prototype.snap_ = function () {
       params[param[0]] = param.slice(1).join('=');
     });
   }
+
+  var route = this.getRouteByPathname_(this.getCurrentPathname());
+  if (route) {
+    Object.keys(route.params).forEach(function (key) {
+      params[key] = route.params[key];
+    });
+  }
+
   this.current_params_ = params;
 };
