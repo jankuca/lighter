@@ -45,7 +45,7 @@ lighter.ExpressionCompiler.EXPRESSION = new RegExp('^' +
 /**
  * Parses the given expression and returns a function that evaluates it
  * @param {string} exp The expression to parse.
- * @param {lighter.Scope} scope The scope in which will expression to parse.
+ * @param {!lighter.Scope} scope The scope in which will expression to parse.
  * @return {function(): *} A function that evaluates the given expression.
  */
 lighter.ExpressionCompiler.compile = function (exp, scope) {
@@ -94,18 +94,7 @@ lighter.ExpressionCompiler.compile = function (exp, scope) {
 
     // Setter
     if (parts[1]) {
-      var levels = parts[1].split('.');
-      var max_level = levels.length - 1;
-      var target = scope;
-      levels.forEach(function (level, i) {
-        if (i === max_level) {
-          target[level] = value;
-        } else {
-          var obj = target[level] || {};
-          target[level] = obj;
-          target = obj;
-        }
-      });
+      lighter.ExpressionCompiler.set(exp, value, scope);
     }
 
     return value;
@@ -139,6 +128,29 @@ lighter.ExpressionCompiler.get = function (exp, scope) {
   });
 
   return value;
+};
+
+/**
+ * Parses the given getter expression and sets the target value
+ * - If there is not the complete property chain present in the scope,
+ *   it is automatically built from simple objects.
+ * @param {string} exp The getter expression to parse.
+ * @param {*} value The value to set.
+ * @param {!lighter.Scope} scope The scope to which to write the value.
+ */
+lighter.ExpressionCompiler.set = function (exp, value, scope) {
+  var levels = exp.split('.');
+  var max_level = levels.length - 1;
+  var target = scope;
+  levels.forEach(function (level, i) {
+    if (i === max_level) {
+      target[level] = value;
+    } else {
+      var obj = target[level] || {};
+      target[level] = obj;
+      target = obj;
+    }
+  });
 };
 
 /**
