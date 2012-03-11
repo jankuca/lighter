@@ -64,7 +64,7 @@ lighter.RepeaterAttributeWidget.prototype.createItem_ = function (item) {
   var repeater_scope = lighter.scope(element, this.scope);
   repeater_scope[this.target_key] = item;
 
-  var template = lighter.compile(element);
+  var template = lighter.compile(element, true);
   template(repeater_scope);
 
   return repeater_scope;
