@@ -33,15 +33,21 @@ lighter.RouterService = function (location, history) {
 };
 
 /**
- * Set the root directory
+ * Gets or set the root directory
  * Any absolute target pathname is resolved relatively to this directory
- * @param {string} root The new root.
+ * @param {string} root A new root.
+ * @return {?string} The root.
  */
-lighter.RouterService.prototype.setRoot = function (root) {
+lighter.RouterService.prototype.root = function (root) {
+  if (arguments.length === 0) {
+    return this.root_;
+  }
+
   if (root[root.length - 1] === '/') {
     root = root.substr(0, root.length - 1);
   }
   this.root_ = root;
+  return null;
 };
 
 /**
