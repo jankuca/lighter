@@ -306,7 +306,10 @@ lighter.getWidgetPlaceholdersFromDOM_ = function (dom, include_root) {
       var elements = dom.querySelectorAll(selector);
       Array.prototype.forEach.call(elements, function (element) {
         var exclude = placeholders.some(function (placeholder) {
-          return placeholder.root.contains(element);
+          // Allow elements being roots of multiple widgets
+          if (placeholder.root !== element) {
+            return placeholder.root.contains(element);
+          }
         });
         if (!exclude) {
           push(element);
