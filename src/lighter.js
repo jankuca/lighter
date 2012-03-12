@@ -419,3 +419,18 @@ lighter.widget('@lt:click', function (element, exp, scope) {
     scope.$update();
   };
 });
+
+lighter.widget('@lt:href', function (element, pathname, scope) {
+  var router = lighter.service('$router');
+  var root = router.root();
+
+  // Make the element behave like a regular link
+  // (allow opening in a new tab, showing correct URL in the status bar)
+  element.setAttribute('href', root + pathname);
+  element.addEventListener('click', function (e) {
+    var router = lighter.service('$router');
+    router.go(pathname);
+    // Prevent the default browser navigation behavior; it's the router's job.
+    e.preventDefault();
+  }, false);
+});
