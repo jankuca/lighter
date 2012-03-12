@@ -434,3 +434,16 @@ lighter.widget('@lt:href', function (element, pathname, scope) {
     e.preventDefault();
   }, false);
 });
+
+lighter.widget('@lt:return', function (element, exp, scope) {
+  element.onkeypress = function (e) {
+    if (e.keyCode === 13) {
+      scope['$event'] = e;
+      var fn = lighter.ExpressionCompiler.compile(exp, scope);
+      var res = fn();
+      delete scope['$event'];
+      scope.$update();
+      return res;
+    }
+  };
+});
