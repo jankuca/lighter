@@ -4,6 +4,7 @@ goog.provide('lighter');
 
 goog.require('lighter.ControllerAttributeWidget');
 goog.require('lighter.DOMCompiler');
+goog.require('lighter.DatabaseService');
 goog.require('lighter.ExpressionCompiler');
 goog.require('lighter.RepeaterAttributeWidget');
 goog.require('lighter.RouterService');
@@ -327,6 +328,10 @@ lighter.getWidgetPlaceholdersFromDOM_ = function (dom, include_root) {
 lighter.service('$router', function () {
   return lighter.create(lighter.RouterService, null,
     goog.global.location, goog.global.history);
+});
+
+lighter.service('$database', function () {
+  return lighter.create(lighter.DatabaseService);
 });
 
 
