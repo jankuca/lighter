@@ -201,6 +201,12 @@ lighter.RouterService.prototype.getState_ = function (pathname, params) {
 
 /**
  * Gets a route by a pathname
+ * @param {string} pathname The pathname against which to match routes.
+ * @return {{
+ *   pathname: string,
+ *   handler: (function(): string),
+ *   params: Object.<string, string>
+ * }} A filled in route.
  */
 lighter.RouterService.prototype.getRouteByPathname_ = function (pathname) {
   var routes = this.routes_;
@@ -223,6 +229,8 @@ lighter.RouterService.prototype.getRouteByPathname_ = function (pathname) {
       };
     }
   }
+
+  return null;
 };
 
 /**
