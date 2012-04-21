@@ -185,9 +185,10 @@ lighter.service = function (name, Constructor) {
  *   - If prefixed by "@", it is considered an attribute widget.
  * @param {function(!Element)} factory A function called for each widget
  *   found during a compilation process.
+ * @param {boolean=} is_container Whether the widget creates its own sub-scope.
  * @return {?function(!Element):?Object} The widget factory function.
  */
-lighter.widget = function (name, factory) {
+lighter.widget = function (name, factory, is_container) {
   var widgets = lighter.widgets_;
 
   var type = lighter.WidgetType.ELEMENT;
@@ -209,7 +210,8 @@ lighter.widget = function (name, factory) {
   widgets.push({
     name: name,
     type: type,
-    factory: factory
+    factory: factory,
+    is_container: !!is_container
   });
   return factory;
 };
@@ -292,7 +294,8 @@ lighter.getWidgetPlaceholdersFromDOM_ = function (dom, include_root) {
         placeholders.push({
           root: element,
           data: data,
-          factory: definition.factory
+          factory: definition.factory,
+          is_container: definition.is_container
         });
       };
 
@@ -307,8 +310,9 @@ lighter.getWidgetPlaceholdersFromDOM_ = function (dom, include_root) {
       var elements = dom.querySelectorAll(selector);
       Array.prototype.forEach.call(elements, function (element) {
         var exclude = placeholders.some(function (placeholder) {
-          // Allow elements being roots of multiple widgets
-          if (placeholder.root !== element) {
+          // Only look for children in containers (that have their own scopes)
+          // Allow elements being roots of multiple widgets (placeholder.root)
+          if (placeholder.is_container && placeholder.root !== element) {
             return placeholder.root.contains(element);
           }
         });
@@ -347,19 +351,19 @@ lighter.widget('@lt:controller', function (root, name, scope) {
   }
 
   return new lighter.ControllerAttributeWidget(root, controller, scope);
-});
+}, true);
 
 
 lighter.widget('@lt:view', function (container, key, scope) {
   return new lighter.ViewAttributeWidget(container, scope, key);
-});
+}, true);
 
 lighter.widget('@lt:repeat', function (container, exp, scope) {
   var keys = lighter.ExpressionCompiler.parseKeyLoopExpression(exp);
 
   return new lighter.RepeaterAttributeWidget(
     container, scope, keys.source, keys.target);
-});
+}, true);
 
 lighter.widget('@lt:bind', function (element, exp, scope) {
   var state = element.textContent;
