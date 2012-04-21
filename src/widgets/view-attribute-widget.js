@@ -26,7 +26,9 @@ lighter.ViewAttributeWidget.prototype.init_ = function () {
   var builder = /** @type {?function(Object=): string} */ this.scope[this.key];
   this.builder = builder;
 
-  this.render(builder);
+  if (this.builder) {
+    this.render(builder);
+  }
 };
 
 /**
