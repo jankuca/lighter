@@ -104,8 +104,9 @@ lighter.RouterService.prototype.param = function (key) {
  * Pushes a new history entry to the stack and broadcasts the fact
  * @param {string} pathname The target pathname.
  * @param {Object=} params Parameters.
+ * @param {boolean=} replace Whether to force a state replace.
  */
-lighter.RouterService.prototype.go = function (pathname, params) {
+lighter.RouterService.prototype.go = function (pathname, params, replace) {
   var state = this.getState_(pathname, params);
 
   var path = state['path'];
@@ -113,14 +114,24 @@ lighter.RouterService.prototype.go = function (pathname, params) {
     // Absolute pathnames are relative to the set root
     path = this.root_ + path;
   }
+  var current_path = path !== this.location_.pathname + this.location_.search;
 
-  if (path !== this.location_.pathname + this.location_.search) {
+  if (!replace && current_path) {
     // Do not push the same state to the stack twice in a row
     this.history_.pushState(state, '', path);
   } else {
     this.history_.replaceState(state, '', path);
   }
   this.emitLocation(pathname);
+};
+
+/**
+ * Replaces the current history entry and broadcasts the fact
+ * @param {string} pathname The target pathname.
+ * @param {Object=} params Parameters.
+ */
+lighter.RouterService.prototype.replace = function (pathname, params) {
+  this.go(pathname, params, true);
 };
 
 /**
