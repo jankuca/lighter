@@ -45,7 +45,7 @@ lighter.ExpressionCompiler.EXPRESSION = new RegExp('^' +
 /**
  * Parses the given expression and returns a function that evaluates it
  * @param {string} exp The expression to parse.
- * @param {!lighter.Scope} scope The scope in which will expression to parse.
+ * @param {!lighter.Scope} scope The scope in which to look for values.
  * @return {function(): *} A function that evaluates the given expression.
  */
 lighter.ExpressionCompiler.compile = function (exp, scope) {
