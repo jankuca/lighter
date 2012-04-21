@@ -143,7 +143,7 @@ lighter.RouterService.prototype.emitLocation = function (pathname) {
 
   this.emit('location', {
     pathname: pathname,
-    params: route.params,
+    params: route ? route.params : {},
     handler: route ? route.handler : null
   });
 };
