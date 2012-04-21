@@ -181,7 +181,7 @@ lighter.RouterService.prototype.getCurrentPathname = function () {
 lighter.RouterService.prototype.getState_ = function (pathname, params) {
   var search = '';
   if (params) {
-    search = Object.keys(params).forEach(function (key) {
+    search = Object.keys(params).map(function (key) {
       return key + '=' + goog.global.encodeURIComponent(params[key]);
     }).join('&');
     search = search ? '?' + search : '';
