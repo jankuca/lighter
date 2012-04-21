@@ -429,6 +429,16 @@ lighter.widget('@lt:click', function (element, exp, scope) {
   };
 });
 
+lighter.widget('@lt:submit', function (element, exp, scope) {
+  element.onsubmit = function (e) {
+    var fn = lighter.ExpressionCompiler.compile(exp, scope);
+    fn();
+    scope.$update();
+
+    e.preventDefault();
+  };
+});
+
 lighter.widget('@lt:href', function (element, pathname, scope) {
   var router = lighter.service('$router');
   var root = router.root();
