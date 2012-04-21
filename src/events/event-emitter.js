@@ -119,5 +119,13 @@ lighter.events.EventEmitter.prototype.emit = function (type, data) {
         break;
       }
     }
+  } else {
+    switch (type) {
+    case 'error':
+      if (data) {
+        throw data;
+      }
+      break;
+    }
   }
 };
