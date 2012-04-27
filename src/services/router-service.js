@@ -97,7 +97,7 @@ lighter.RouterService.prototype.param = function (key) {
   if (typeof value === 'undefined') {
     return null;
   }
-  return value;
+  return goog.global.decodeURIComponent(value);
 };
 
 /**
