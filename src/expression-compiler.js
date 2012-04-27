@@ -41,6 +41,19 @@ lighter.ExpressionCompiler.EXPRESSION = new RegExp('^' +
   '(\\([^\)]*\\))?$'
 );
 
+/**
+ * A first expression level syntax
+ */
+lighter.ExpressionCompiler.FIRST_LEVEL = /^[a-zA-Z\$_:]+/;
+
+/**
+ * Deeper expression levels
+ */
+lighter.ExpressionCompiler.DEEPER_LEVEL = new RegExp('(' +
+  '\\[[a-zA-Z\\$_.:]+\\]|' +
+  '\\.[a-zA-Z\\$_:]+' +
+')', 'g');
+
 
 /**
  * Parses the given expression and returns a function that evaluates it
@@ -119,7 +132,7 @@ lighter.ExpressionCompiler.get = function (exp, scope) {
   }
 
   var value = scope;
-  var levels = exp.split('.');
+  var levels = lighter.ExpressionCompiler.parseLevels(exp);
   levels.some(function (level) {
     if (typeof value[level] === 'undefined') {
       value = undefined;
@@ -132,6 +145,32 @@ lighter.ExpressionCompiler.get = function (exp, scope) {
 };
 
 /**
+ * Splits the expression and returns level expressions one by one
+ * @param {string} exp The getter expression to split.
+ * @return {!Array.<string>} Level expressions.
+ */
+lighter.ExpressionCompiler.parseLevels = function (exp) {
+  var levels = [];
+
+  var match = exp.match(lighter.ExpressionCompiler.FIRST_LEVEL) || [];
+  levels.push(match[0] || '');
+  exp = exp.substr(match.length);
+
+  if (exp) {
+    var matches = exp.match(lighter.ExpressionCompiler.DEEPER_LEVEL) || [];
+    matches.forEach(function (match) {
+      if (match[0] === '.') {
+        levels.push(match.substr(1));
+      } else {
+        levels.push(match.substr(1, match.length - 2));
+      }
+    });
+  }
+
+  return levels;
+};
+
+/**
  * Parses the given getter expression and sets the target value
  * - If there is not the complete property chain present in the scope,
  *   it is automatically built from simple objects.
@@ -140,7 +179,7 @@ lighter.ExpressionCompiler.get = function (exp, scope) {
  * @param {!lighter.Scope} scope The scope to which to write the value.
  */
 lighter.ExpressionCompiler.set = function (exp, value, scope) {
-  var levels = exp.split('.');
+  var levels = lighter.ExpressionCompiler.parseLevels(exp);
   var max_level = levels.length - 1;
   var target = scope;
   levels.forEach(function (level, i) {
