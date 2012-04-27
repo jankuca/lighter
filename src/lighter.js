@@ -402,16 +402,24 @@ lighter.widget('@name', function (element, exp, scope) {
     lighter.ExpressionCompiler.set(exp, element.value, scope);
     update();
 
+    var getValue = function () {
+      var value = element.value;
+      state = lighter.ExpressionCompiler.get(exp, scope);
+      if (value !== state) {
+        lighter.ExpressionCompiler.set(exp, value, scope);
+        state = value;
+      }
+    };
+
     element.addEventListener('keypress', function (e) {
       // Run this asynchronously to have the correct value of element.value
       setTimeout(function () {
-        var value = element.value;
-        state = lighter.ExpressionCompiler.get(exp, scope);
-        if (value !== state) {
-          lighter.ExpressionCompiler.set(exp, value, scope);
-          state = value;
-        }
+        getValue();
       }, 0);
+    }, false);
+
+    element.addEventListener('blur', function (e) {
+      getValue();
     }, false);
 
     return {
