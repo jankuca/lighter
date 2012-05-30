@@ -20,7 +20,8 @@ lighter.events.EventEmitter = function () {
   /**
    * Event listener storage
    * @type {Object.<string, Array.<{
-   *   listener: (function(): ?boolean | function(*): ?boolean),
+   *   listener: (function(): boolean | function(*): boolean |
+   *     function() | function(*)),
    *   ctx: ?Object,
    *   once: boolean
    * }>>}
@@ -39,7 +40,8 @@ lighter.events.EventEmitter = function () {
 /**
  * Adds a new event listener
  * @param {string} type The event type to which to subscribe.
- * @param {function(): ?boolean | function(*): ?boolean} fn The listener.
+ * @param {function(): boolean | function(*): boolean |
+ *   function() | function(*)} fn The listener.
  * @param {?Object=} ctx The object in whose context to execute the listener.
  * @param {boolean=} once Whether to unsubscribe after one event.
  */
@@ -63,7 +65,8 @@ lighter.events.EventEmitter.prototype.on = function (type, fn, ctx, once) {
 /**
  * Adds a new event listener
  * @param {string} type The event type to which to subscribe.
- * @param {function(): ?boolean | function(*): ?boolean} fn The listener.
+ * @param {function(): boolean | function(*): boolean |
+ *   function() | function(*)} fn The listener.
  * @param {?Object=} ctx The object in whose context to execute the listener.
  */
 lighter.events.EventEmitter.prototype.once = function (type, fn, ctx) {
@@ -79,7 +82,8 @@ lighter.events.EventEmitter.prototype.pipe = function (type, target) {
 /**
  * Removes the given event listener (or all if not specified)
  * @param {string} type The event type from which to unsubscribe
- * @param {function(): ?boolean | function(*): ?boolean} fn The listener.
+ * @param {function(): boolean | function(*): boolean |
+ *   function() | function(*)} fn The listener.
  */
 lighter.events.EventEmitter.prototype.off = function (type, fn) {
   var listeners = this.$$event_listeners_[type] || [];

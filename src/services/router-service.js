@@ -103,7 +103,7 @@ lighter.RouterService.prototype.param = function (key) {
 /**
  * Pushes a new history entry to the stack and broadcasts the fact
  * @param {string} pathname The target pathname.
- * @param {Object=} params Parameters.
+ * @param {!Object=} params Parameters.
  * @param {boolean=} replace Whether to force a state replace.
  */
 lighter.RouterService.prototype.go = function (pathname, params, replace) {
@@ -128,7 +128,7 @@ lighter.RouterService.prototype.go = function (pathname, params, replace) {
 /**
  * Replaces the current history entry and broadcasts the fact
  * @param {string} pathname The target pathname.
- * @param {Object=} params Parameters.
+ * @param {!Object=} params Parameters.
  */
 lighter.RouterService.prototype.replace = function (pathname, params) {
   this.go(pathname, params, true);
@@ -176,7 +176,7 @@ lighter.RouterService.prototype.getCurrentPathname = function () {
 /**
  * Returns a state object for the given pathname and params
  * @param {string} pathname The target pathname.
- * @param {Object=} params Parameters.
+ * @param {!Object=} params Parameters.
  */
 lighter.RouterService.prototype.getState_ = function (pathname, params) {
   var search = '';
@@ -202,10 +202,10 @@ lighter.RouterService.prototype.getState_ = function (pathname, params) {
 /**
  * Gets a route by a pathname
  * @param {string} pathname The pathname against which to match routes.
- * @return {{
+ * @return {?{
  *   pathname: string,
  *   handler: (function(): string),
- *   params: Object.<string, string>
+ *   params: !Object.<string, string>
  * }} A filled in route.
  */
 lighter.RouterService.prototype.getRouteByPathname_ = function (pathname) {

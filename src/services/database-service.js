@@ -31,7 +31,7 @@ lighter.DatabaseService = function (users) {
 (function () {
   var global = goog.global;
   lighter.DatabaseService.IDBTransaction = global.IDBTransaction ||
-    global.webkitIDBTransaction || global.mozIDBTransaction ||
+    global.webkitIDBTransaction || global['mozIDBTransaction'] ||
     global['msIDBTransaction'];
 }());
 
@@ -111,7 +111,8 @@ lighter.DatabaseService.prototype.migrate_ = function (database, version) {
     versions.forEach(function (v) {
       var step = migrations[v]();
 
-      var current_stores = database.objectStoreNames;
+      var current_stores =
+        /** @type {!DOMStringList} */ database.objectStoreNames;
 
       var stores = step.stores || {};
       Object.keys(stores).forEach(function (name) {
@@ -187,7 +188,7 @@ lighter.DatabaseService.prototype.createKeyRange =
 
   var global = goog.global;
   var IDBKeyRange = global.IDBKeyRange ||
-    global.webkitIDBKeyRange || global.mozIDBKeyRange ||
+    global.webkitIDBKeyRange || global['mozIDBKeyRange'] ||
     global['msIDBKeyRange'];
 
   var range;
