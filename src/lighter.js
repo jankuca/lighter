@@ -583,3 +583,38 @@ lighter.widget('@lt:attrs', function (element, exp, scope) {
     update: update
   };
 });
+
+lighter.widget('@lt:drag', function (element, exp, scope) {
+  var delta_scope = lighter.scope(element, scope);
+  var handler = lighter.ExpressionCompiler.compile(exp, delta_scope);
+
+  element.addEventListener('mousedown', function (e) {
+    e.stopPropagation();
+
+    var last_x = e.clientX;
+    var last_y = e.clientY;
+    var body = element.ownerDocument.body;
+
+    var onmousemove = function (e) {
+      e.stopPropagation();
+
+      var x = e.clientX;
+      var y = e.clientY;
+      delta_scope['$x'] = x - last_x;
+      delta_scope['$y'] = y - last_y;
+      last_x = x;
+      last_y = y;
+      handler();
+    };
+
+    var onmouseup = function (e) {
+      e.stopPropagation();
+
+      body.removeEventListener('mousemove', onmousemove, false);
+      body.removeEventListener('mouseup', onmouseup, false);
+    };
+
+    body.addEventListener('mousemove', onmousemove, false);
+    body.addEventListener('mouseup', onmouseup, false);
+  }, false);
+});
