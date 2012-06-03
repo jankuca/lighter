@@ -47,6 +47,18 @@ lighter.ExpressionCompiler.KEY_LOOP_EXPRESSION = new RegExp('^' +
 );
 
 /**
+ * The simple key-loop expression syntax
+ * This is the first {RegExp} against which is an expression matched.
+ * The KEY_LOOP_EXPRESSION is used as a backup.
+ * @type {RegExp}
+ */
+lighter.ExpressionCompiler.SIMPLE_KEY_LOOP_EXPRESSION = new RegExp('^' +
+  '\\s*(' + lighter.ExpressionCompiler.FIRST_LEVEL.source + ')' +
+  '\\s+in\\s+(' + lighter.ExpressionCompiler.FIRST_LEVEL.source + ')' +
+  '\\s*$'
+);
+
+/**
  * A valid string {RegExp}
  * - 1: quote type (either ' or ")
  * - 2: the string
@@ -224,6 +236,9 @@ lighter.ExpressionCompiler.set = function (exp, value, scope) {
  */
 lighter.ExpressionCompiler.parseKeyLoopExpression = function (exp) {
   var match = exp.match(lighter.ExpressionCompiler.KEY_LOOP_EXPRESSION);
+  if (!match) {
+    match = exp.match(lighter.ExpressionCompiler.SIMPLE_KEY_LOOP_EXPRESSION);
+  }
   if (!match) {
     throw new Error('Invalid key-loop expression: ' + exp);
   }
