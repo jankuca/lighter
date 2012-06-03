@@ -2,13 +2,17 @@
 
 goog.provide('lighter.Scope');
 
+goog.require('lighter.events.EventEmitter');
+
 
 /**
  * Scope
  * @constructor
+ * @extends {lighter.events.EventEmitter}
  * @param {!Element|Document} root The DOM element to which to bind the scope.
  */
 lighter.Scope = function (root) {
+  lighter.events.EventEmitter.call(this);
 
   /**
    * The root element to which is the scope bound

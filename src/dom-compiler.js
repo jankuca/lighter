@@ -26,6 +26,19 @@ lighter.DOMCompiler.compileDOM = function (dom) {
     var text = texts.snapshotItem(i);
     lighter.DOMCompiler.compileTextNode(text);
   }
+
+  var compileLevel = function (node) {
+    if (node.nodeType === 1) {
+      lighter.DOMCompiler.compileAttributes(node);
+
+      var children = node.childNodes;
+      for (var i = 0, ii = children.length; i < ii; ++i) {
+        compileLevel(children[i]);
+      }
+    }
+  };
+
+  compileLevel(dom);
 };
 
 /**
@@ -69,5 +82,28 @@ lighter.DOMCompiler.compileTextNode = function (text) {
     target.insertBefore(suffix, element.nextSibling);
     // Recursively compile the new text node
     lighter.DOMCompiler.compileTextNode(suffix);
+  }
+};
+
+/**
+ * Transforms attributes with expression markup into a single lt:attrs attr.
+ * @param {!Element} element The element whose attributes to transform.
+ */
+lighter.DOMCompiler.compileAttributes = function (element) {
+  var old = element.getAttribute('lt:attr-patterns');
+  var result = /** @type {!Object} */ goog.global.JSON.parse(old || '{}');
+
+  var attrs = element.attributes;
+  for (var i = 0, ii = attrs.length; i < ii; ++i) {
+    var attr = attrs[i];
+    var value = attr.value;
+    if (attr.name !== 'lt:attr-patterns' && value.indexOf('{{') !== -1) {
+      result[attr.name] = attr.value;
+    }
+  }
+
+  if (Object.keys(result).length) {
+    var value = goog.global.JSON.stringify(result);
+    element.setAttribute('lt:attr-patterns', value);
   }
 };

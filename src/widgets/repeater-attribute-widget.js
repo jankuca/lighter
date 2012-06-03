@@ -35,12 +35,13 @@ lighter.RepeaterAttributeWidget = function (
 lighter.RepeaterAttributeWidget.prototype.init_ = function () {
   var container = this.container;
   var state = [];
-  var items = this.scope[this.source_key];
+  var items = /** @type {Object} */ lighter.ExpressionCompiler.get(
+    this.source_key, this.scope);
 
   container.innerHTML = '';
 
   if (items) {
-    items.forEach(function (item) {
+    Array.prototype.forEach.call(items, function (item) {
       var repeater_scope = this.createItem_(item);
       container.appendChild(repeater_scope.$$root);
       state.push([ item, repeater_scope ]);
@@ -56,7 +57,7 @@ lighter.RepeaterAttributeWidget.prototype.init_ = function () {
  * - A clone of the pattern DOM is created and the scope is bound to it.
  * @private
  * @param {*} item The item data.
- * @return {lighter.Scope} A repeater scope.
+ * @return {!lighter.Scope} A repeater scope.
  */
 lighter.RepeaterAttributeWidget.prototype.createItem_ = function (item) {
   var element = this.pattern.cloneNode(true);

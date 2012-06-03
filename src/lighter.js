@@ -474,3 +474,32 @@ lighter.widget('@lt:return', function (element, exp, scope) {
     }
   };
 });
+
+lighter.widget('@lt:attr-patterns', function (element, json, scope) {
+  var attrs = /** @type {!Object} */ goog.global.JSON.parse(json);
+
+  var stack = Object.keys(attrs).map(function (key) {
+    var state = '';
+    var pattern = attrs[key];
+    return function () {
+      var value = lighter.ExpressionCompiler.fillPattern(pattern, scope);
+      if (value !== state) {
+        element.setAttribute(key, value);
+        state = value;
+      }
+    };
+  });
+
+  var update = function () {
+    stack.forEach(function (fn) {
+      fn();
+    });
+  };
+
+  update();
+
+  return {
+    update: update
+  };
+});
+

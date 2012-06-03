@@ -4,11 +4,37 @@ goog.provide('lighter.ExpressionCompiler');
 
 
 /**
+ * A first expression level syntax
+ */
+lighter.ExpressionCompiler.FIRST_LEVEL = /[a-zA-Z\$_:]+/;
+
+/**
+ * Deeper expression levels
+ */
+lighter.ExpressionCompiler.DEEPER_LEVEL = new RegExp(
+  '\\[[a-zA-Z\\$_.:]+\\]|' +
+  '\\.[a-zA-Z\\$_:]+'
+);
+lighter.ExpressionCompiler.DEEPER_LEVELS = new RegExp('(' +
+  lighter.ExpressionCompiler.DEEPER_LEVEL.source +
+')', 'g');
+
+/**
  * A valid variable name {RegExp}
  * @type {RegExp}
  */
-lighter.ExpressionCompiler.GETTER_EXPRESSION =
-  /[a-zA-Z\$_:](?:[\w\$_.:]*?[\w\$_])?/;
+lighter.ExpressionCompiler.GETTER_EXPRESSION = new RegExp(
+  lighter.ExpressionCompiler.FIRST_LEVEL.source +
+  '(?:' + lighter.ExpressionCompiler.DEEPER_LEVEL.source + ')*'
+);
+
+/**
+ * A valid binding in a pattern
+ * @type {RegExp}
+ */
+lighter.ExpressionCompiler.BINDINGS = new RegExp('\{\{' +
+  lighter.ExpressionCompiler.GETTER_EXPRESSION.source +
+'\}\}', 'g');
 
 /**
  * The key-loop expression syntax
@@ -41,24 +67,11 @@ lighter.ExpressionCompiler.EXPRESSION = new RegExp('^' +
   '(\\([^\)]*\\))?$'
 );
 
-/**
- * A first expression level syntax
- */
-lighter.ExpressionCompiler.FIRST_LEVEL = /^[a-zA-Z\$_:]+/;
-
-/**
- * Deeper expression levels
- */
-lighter.ExpressionCompiler.DEEPER_LEVEL = new RegExp('(' +
-  '\\[[a-zA-Z\\$_.:]+\\]|' +
-  '\\.[a-zA-Z\\$_:]+' +
-')', 'g');
-
 
 /**
  * Parses the given expression and returns a function that evaluates it
  * @param {string} exp The expression to parse.
- * @param {!lighter.Scope} scope The scope in which to look for values.
+ * @param {!(lighter.Scope|Window)} scope The scope in which to get values.
  * @return {function(): *} A function that evaluates the given expression.
  */
 lighter.ExpressionCompiler.compile = function (exp, scope) {
@@ -121,7 +134,7 @@ lighter.ExpressionCompiler.compile = function (exp, scope) {
  * - If there is not the complete property chain present in the scope,
  *   {undefined} is returned.
  * @param {string} exp The getter expression to parse.
- * @param {!lighter.Scope|Window} scope The scope in which to look for
+ * @param {!(lighter.Scope|Window)} scope The scope in which to look for
  *   the value. This can also be a {Window} object for global look-ups.
  * @return {*} The value from the given scope.
  */
@@ -131,10 +144,14 @@ lighter.ExpressionCompiler.get = function (exp, scope) {
     return string_match[2];
   }
 
+  if (/^\d+$/.test(exp)) {
+    return Number(exp);
+  }
+
   var value = scope;
-  var levels = lighter.ExpressionCompiler.parseLevels(exp);
+  var levels = lighter.ExpressionCompiler.parseLevels(exp, scope);
   levels.some(function (level) {
-    if (typeof value[level] === 'undefined') {
+    if (typeof level === 'undefined' || typeof value[level] === 'undefined') {
       value = undefined;
       return true;
     }
@@ -147,22 +164,26 @@ lighter.ExpressionCompiler.get = function (exp, scope) {
 /**
  * Splits the expression and returns level expressions one by one
  * @param {string} exp The getter expression to split.
+ * @param {!(lighter.Scope|Window)} scope The scope from getread
+ *   dynamic keys.
  * @return {!Array.<string>} Level expressions.
  */
-lighter.ExpressionCompiler.parseLevels = function (exp) {
+lighter.ExpressionCompiler.parseLevels = function (exp, scope) {
   var levels = [];
 
   var match = exp.match(lighter.ExpressionCompiler.FIRST_LEVEL) || [];
   levels.push(match[0] || '');
-  exp = exp.substr(match.length);
+  exp = exp.substr(levels[0].length);
 
   if (exp) {
-    var matches = exp.match(lighter.ExpressionCompiler.DEEPER_LEVEL) || [];
+    var matches = exp.match(lighter.ExpressionCompiler.DEEPER_LEVELS) || [];
     matches.forEach(function (match) {
       if (match[0] === '.') {
         levels.push(match.substr(1));
       } else {
-        levels.push(match.substr(1, match.length - 2));
+        var key_exp = match.substr(1, match.length - 2);
+        var key = lighter.ExpressionCompiler.get(key_exp, scope);
+        levels.push(key);
       }
     });
   }
@@ -176,13 +197,16 @@ lighter.ExpressionCompiler.parseLevels = function (exp) {
  *   it is automatically built from simple objects.
  * @param {string} exp The getter expression to parse.
  * @param {*} value The value to set.
- * @param {!lighter.Scope} scope The scope to which to write the value.
+ * @param {!(lighter.Scope|Window)} scope The scope to which to get value.
  */
 lighter.ExpressionCompiler.set = function (exp, value, scope) {
-  var levels = lighter.ExpressionCompiler.parseLevels(exp);
+  var levels = lighter.ExpressionCompiler.parseLevels(exp, scope);
   var max_level = levels.length - 1;
   var target = scope;
-  levels.forEach(function (level, i) {
+  levels.some(function (level, i) {
+    if (typeof level === 'undefined') {
+      return true;
+    }
     if (i === max_level) {
       target[level] = value;
     } else {
