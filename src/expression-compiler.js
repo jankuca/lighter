@@ -66,6 +66,8 @@ lighter.ExpressionCompiler.SIMPLE_KEY_LOOP_EXPRESSION = new RegExp('^' +
  */
 lighter.ExpressionCompiler.STRING_EXPRESSION = /^(['"])(.*)\1$/;
 
+lighter.ExpressionCompiler.STRING = /['"].*?['"]/;
+
 /**
  * The expression syntax {RegExp}
  * - 1: a setter expression or null
@@ -78,6 +80,29 @@ lighter.ExpressionCompiler.EXPRESSION = new RegExp('^' +
   '([^(|=\\s](?:[^(|=]*[^(|=\\s])?)' +
   '(\\([^\)]*\\))?$'
 );
+
+/**
+ * A number, a string or a getter expression
+ */
+lighter.ExpressionCompiler.VALUE_EXPRESSION = new RegExp(
+  '\\d+|' +
+  lighter.ExpressionCompiler.STRING.source + '|' +
+  lighter.ExpressionCompiler.GETTER_EXPRESSION.source
+);
+
+lighter.ExpressionCompiler.ASSIGN_EXPRESSION = new RegExp(
+  '[a-zA-Z][a-zA-Z0-9\\-:]*=' +
+  '(?:' + lighter.ExpressionCompiler.VALUE_EXPRESSION.source + ')'
+);
+
+/**
+ * The attribute condition syntax
+ */
+lighter.ExpressionCompiler.ATTR_CONDITIONS = new RegExp('^(?:' +
+  '(' + lighter.ExpressionCompiler.GETTER_EXPRESSION.source + '):\\s*' +
+  '(' + lighter.ExpressionCompiler.ASSIGN_EXPRESSION.source + ')' +
+  '(?:,\\s*(' + lighter.ExpressionCompiler.ASSIGN_EXPRESSION.source + '))*' +
+'(?:;|$))+');
 
 
 /**
@@ -247,4 +272,70 @@ lighter.ExpressionCompiler.parseKeyLoopExpression = function (exp) {
     source: match[2],
     target: match[1]
   };
+};
+
+/**
+ * Fills the expressions in the given string with values from the scope.
+ * @param {string} pat The pattern into which to replace the values.
+ * @param {!(lighter.Scope|Window)} scope The scope from which to get values.
+ * @return {string} The result.
+ */
+lighter.ExpressionCompiler.fillPattern = function (pat, scope) {
+  return pat.replace(lighter.ExpressionCompiler.BINDINGS, function (exp) {
+    exp = exp.substr(2, exp.length - 4);
+    return lighter.ExpressionCompiler.get(exp, scope) || '';
+  });
+};
+
+/**
+ * Parses an attribute condition expression.
+ * @param {string} exp The attribute condition expression to parse.
+ * @param {!(lighter.Scope|Window)} scope The scope from which to get values.
+ * @return {!Array.<{ check: (function():boolean), attributes: !Object }>}
+ *   Conditions.
+ */
+lighter.ExpressionCompiler.parseAttrConditions = function (exp, scope) {
+  var matches = exp.match(lighter.ExpressionCompiler.ATTR_CONDITIONS);
+  if (!matches) {
+    throw new Error('Invalid attribute condition expression:' + exp);
+  }
+
+  var conditions = [];
+  var condition;
+  matches.slice(1).forEach(function (match) {
+    if (!match) return;
+    if (match.indexOf('=') === -1) {
+      // New condition
+      var check = function () {
+        var value = Boolean(lighter.ExpressionCompiler.get(match, scope));
+
+        if (value) {
+          // Update attributes
+          var map = this.attribute_map_;
+          var attrs = this.attributes;
+          Object.keys(map).forEach(function (attr_name) {
+            var value = lighter.ExpressionCompiler.get(map[attr_name], scope);
+            attrs[attr_name] = value;
+          });
+        }
+
+        return value;
+      };
+      condition = {
+        check: check,
+        attribute_map_: {},
+        attributes: {}
+      };
+      conditions.push(condition);
+
+    } else {
+      // New attribute
+      var parts = match.split('=');
+      var attr_name = parts[0];
+      var getter = parts.slice(1).join('=');
+      condition.attribute_map_[attr_name] = getter;
+    }
+  });
+
+  return conditions;
 };

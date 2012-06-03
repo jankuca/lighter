@@ -561,3 +561,25 @@ lighter.widget('@lt:attr-patterns', function (element, json, scope) {
   };
 });
 
+lighter.widget('@lt:attrs', function (element, exp, scope) {
+  var conditions = lighter.ExpressionCompiler.parseAttrConditions(exp, scope);
+
+  var update = function () {
+    conditions.forEach(function (condition) {
+      var attrs = condition.attributes;
+      if (condition.check()) {
+        Object.keys(attrs).forEach(function (attr_name) {
+          element.setAttribute(attr_name, attrs[attr_name]);
+        });
+      } else {
+        Object.keys(attrs).forEach(function (attr_name) {
+          element.removeAttribute(attr_name);
+        });
+      }
+    });
+  };
+
+  return {
+    update: update
+  };
+});
