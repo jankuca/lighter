@@ -526,6 +526,13 @@ lighter.widget('@lt:return', function (element, exp, scope) {
   };
 });
 
+lighter.widget('@lt:change', function (element, exp, scope) {
+  element.addEventListener('change', function (e) {
+    var fn = lighter.ExpressionCompiler.compile(exp, scope);
+    fn();
+  }, false);
+});
+
 lighter.widget('@lt:attr-patterns', function (element, json, scope) {
   var attrs = /** @type {!Object} */ goog.global.JSON.parse(json);
 
