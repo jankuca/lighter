@@ -207,9 +207,20 @@ lighter.widget = function (name, factory, is_container) {
     return null;
   }
 
+  var selector = null;
+  switch (type) {
+  case lighter.WidgetType.ELEMENT:
+    selector = name.replace(':', '\\:');
+    break;
+  case lighter.WidgetType.ATTRIBUTE:
+    selector = '[' + name.replace(':', '\\:') + ']';
+    break;
+  }
+
   widgets.push({
     name: name,
     type: type,
+    selector: selector,
     factory: factory,
     is_container: !!is_container
   });
@@ -229,16 +240,64 @@ lighter.template = function (dom, include_root) {
   }
 
   return function (scope) {
-    var places = lighter.getWidgetPlaceholdersFromDOM_(dom, include_root);
-    places.forEach(function (placeholder) {
-      var widget = placeholder.factory.call(null,
-        placeholder.root, placeholder.data, scope);
+    lighter.liveWidgetPlaceholdersInDOM_(dom, scope, include_root);
+  };
+};
 
-      if (widget) {
-        scope.$addWidget(widget);
+lighter.liveWidgetPlaceholdersInDOM_ = function (dom, scope, include_root) {
+  var definitions = lighter.widgets_;
+
+  var processChildren = function (root, scope) {
+    var children = root.childNodes;
+    for (var i = 0, ii = children.length; i < ii; ++i) {
+      var node = children[i];
+      if (node.nodeType === 1) { // ELEMENT_NODE
+        processElement(node, scope);
+      }
+    }
+
+    if (root === scope.$$root) {
+      scope.emit('ready');
+    }
+  };
+
+  var processElement = function (element, scope) {
+    var is_container = false;
+
+    var matched = false;
+    definitions.forEach(function (definition) {
+      var matchesSelector = (dom.matchesSelector ||
+        dom.webkitMatchesSelector || dom.mozMatchesSelector);
+
+      if (matchesSelector.call(element, definition.selector)) {
+        // Get data
+        var data = null;
+        if (definition.type === lighter.WidgetType.ATTRIBUTE) {
+          data = element.getAttribute(definition.name);
+        }
+        // Create widget
+        var widget = definition.factory.call(null, element, data, scope);
+
+        // Register widget
+        if (widget) {
+          scope.$addWidget(widget);
+        }
+
+        is_container = definition.is_container;
+        matched = true
       }
     });
+
+    if (!matched || !is_container) {
+      processChildren(element, scope);
+    }
   };
+
+  if (include_root) {
+    processElement(dom, scope);
+  } else {
+    processChildren(dom, scope);
+  }
 };
 
 
@@ -259,71 +318,47 @@ lighter.getServices_ = function (args) {
 };
 
 /**
- * Returns an {Array} of widget root elements in the given DOM ({Element})
- * @private
- * @param {Element} dom The DOM element in which to look for widgets.
- * @param {boolean=} include_root Whether the root DOM element should be
- *   included in the widget matching process.
- * @return {Array.<{
- *   root: !Element,
- *   data: !Object,
- *   factory: function(!Element)
- * }>} A list of widget placeholders.
+ * Returns the root element of the closest parent container widget
+ * @param {!Node} node A DOM node.
+ * @return {Element} The closest parent container widget root.
  */
-lighter.getWidgetPlaceholdersFromDOM_ = function (dom, include_root) {
-  var placeholders = [];
+lighter.getParentContainer_ = function (node) {
+  var parent = /** @type {Element} */ node.parentNode;
+  if (!parent) {
+    return null;
+  }
 
-  lighter.widgets_.forEach(function (definition) {
-    var selector;
-    switch (definition.type) {
-    case lighter.WidgetType.ELEMENT:
-      selector = definition.name.replace(':', '\\:');
-      break;
-    case lighter.WidgetType.ATTRIBUTE:
-      selector = '[' + definition.name.replace(':', '\\:') + ']';
-      break;
+  var SELECTOR_RX = /^([\w\-:\\]*)(?:\[([\w\-:\\]+)(?:=(["'])?(.*)\3)?\])?$/;
+
+  /**
+   * @type {function(this: Element, string): boolean}
+   */
+  var matchesSelector = parent.matchesSelector || function (selector) {
+    var match = selector.match(SELECTOR_RX);
+    if (!match || this.nodeType !== 1) {
+      return false;
     }
+    if (match[1] && this.tagName !== match[1]) {
+      return false;
+    }
+    if (match[4] !== undefined) {
+      return this.getAttribute(match[2]) === match[4];
+    }
+    return !!this.getAttribute(match[2]);
+  };
 
-    if (selector) {
-      var push = function (element) {
-        var data = null;
-        if (definition.type === lighter.WidgetType.ATTRIBUTE) {
-          data = element.getAttribute(definition.name);
-        }
-
-        placeholders.push({
-          root: element,
-          data: data,
-          factory: definition.factory,
-          is_container: definition.is_container
-        });
-      };
-
-      if (include_root) {
-        var matchesSelector = (dom.matchesSelector ||
-          dom.webkitMatchesSelector || dom.mozMatchesSelector);
-        if (matchesSelector.call(dom, selector)) {
-          push(dom);
-        }
+  var definitions = lighter.widgets_;
+  var ii = definitions.length;
+  while (parent) {
+    for (var i = 0; i < ii; ++i) {
+      var selector = definitions[i].selector;
+      if (matchesSelector.call(parent, selector)) {
+        return parent;
       }
-
-      var elements = dom.querySelectorAll(selector);
-      Array.prototype.forEach.call(elements, function (element) {
-        var exclude = placeholders.some(function (placeholder) {
-          // Only look for children in containers (that have their own scopes)
-          // Allow elements being roots of multiple widgets (placeholder.root)
-          if (placeholder.is_container && placeholder.root !== element) {
-            return placeholder.root.contains(element);
-          }
-        });
-        if (!exclude) {
-          push(element);
-        }
-      });
     }
-  });
-
-  return placeholders;
+    parent = /** @type {Element} */ parent.parentNode;
+  }
+  return null;
 };
 
 
@@ -353,17 +388,17 @@ lighter.widget('@lt:controller', function (root, name, scope) {
   return new lighter.ControllerAttributeWidget(root, controller, scope);
 }, true);
 
-
-lighter.widget('@lt:view', function (container, key, scope) {
-  return new lighter.ViewAttributeWidget(container, scope, key);
-}, true);
-
 lighter.widget('@lt:repeat', function (container, exp, scope) {
   var keys = lighter.ExpressionCompiler.parseKeyLoopExpression(exp);
 
   return new lighter.RepeaterAttributeWidget(
     container, scope, keys.source, keys.target);
 }, true);
+
+lighter.widget('@lt:view', function (container, key, scope) {
+  return new lighter.ViewAttributeWidget(container, scope, key);
+}, true);
+
 
 lighter.widget('@lt:bind', function (element, exp, scope) {
   var state = element.textContent;
