@@ -2,6 +2,8 @@
 
 goog.provide('lighter.RepeaterAttributeWidget');
 
+goog.require('lighter.ExpressionCompiler');
+
 
 /**
  * Repeater attribute widget
@@ -86,6 +88,7 @@ lighter.RepeaterAttributeWidget.prototype.update = function () {
 
   if (items !== this.items_) {
     this.init_();
+    this.fireChangeEvent_();
     return;
   }
   if (!items) {
@@ -103,6 +106,8 @@ lighter.RepeaterAttributeWidget.prototype.update = function () {
     container.removeChild(container.childNodes[i]);
   };
 
+  var changed = false;
+
   for (var i = 0, ii = items.length; i < ii; ++i) {
     var item = items[i];
     var ref = state[i];
@@ -112,20 +117,36 @@ lighter.RepeaterAttributeWidget.prototype.update = function () {
         // New item at the end
         var repeater_scope = insertItem(i, item);
         state[i] = [ item, repeater_scope ];
+        changed = true;
       }
     } else if (typeof item === 'undefined') {
       // Removed item
       if (ref !== null) {
         removeItem(i);
         state[i] = null;
+        changed = true;
       }
     } else if (ref[0] !== item) {
       // Replaced item
       removeItem(i);
       var repeater_scope = insertItem(i, item);
       state[i] = [ item, repeater_scope ];
+      changed = true;
     } else {
       ref[1].$update();
     }
   }
+
+  if (changed) {
+    this.fireChangeEvent_();
+  }
+};
+
+
+lighter.RepeaterAttributeWidget.prototype.fireChangeEvent_ = function () {
+  var container = this.container;
+  var doc = container.ownerDocument;
+  var e = doc.createEvent('HTMLEvents');
+  e.initEvent('change', false, false);
+  return container.dispatchEvent(e);
 };
