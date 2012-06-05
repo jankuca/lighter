@@ -659,7 +659,6 @@ lighter.widget('@lt:show', function (element, cond, scope) {
       switch (parts[2]) {
       case 'is':
         show = (value === target);
-        console.log(cond, value, target, show, scope)
         break;
       case 'isnt':
         show = (value !== target);
