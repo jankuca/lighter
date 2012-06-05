@@ -465,7 +465,7 @@ lighter.widget('@name', function (element, exp, scope) {
       }
     };
 
-    if (element.tagName !== 'SELECT') {
+    if (element.getAttribute('lt:continuous') === 'true') {
       element.addEventListener('keypress', function (e) {
         // Run this asynchronously to have the correct value of element.value
         setTimeout(function () {
