@@ -99,7 +99,7 @@ lighter.ExpressionCompiler.ASSIGN_EXPRESSION = new RegExp(
  * The attribute condition syntax
  */
 lighter.ExpressionCompiler.ATTR_CONDITIONS = new RegExp('^(?:' +
-  '(' + lighter.ExpressionCompiler.GETTER_EXPRESSION.source + '):\\s*' +
+  '(!?' + lighter.ExpressionCompiler.GETTER_EXPRESSION.source + '):\\s*' +
   '(' + lighter.ExpressionCompiler.ASSIGN_EXPRESSION.source + ')' +
   '(?:,\\s*(' + lighter.ExpressionCompiler.ASSIGN_EXPRESSION.source + '))*' +
 '(?:;|$))+');
@@ -311,7 +311,9 @@ lighter.ExpressionCompiler.parseAttrConditions = function (exp, scope) {
     if (match.indexOf('=') === -1) {
       // New condition
       var check = function () {
+        var exp = (match[0] === '!') ? match.substr(1) : match;
         var value = Boolean(lighter.ExpressionCompiler.get(match, scope));
+        value = (match[0] === '!') ? !value : value;
 
         if (value) {
           // Update attributes
