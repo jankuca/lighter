@@ -188,7 +188,10 @@ lighter.ExpressionCompiler.get = function (exp, scope) {
   var value = scope;
   var levels = lighter.ExpressionCompiler.parseLevels(exp, scope);
   levels.some(function (level) {
-    if (typeof level === 'undefined' || typeof value[level] === 'undefined') {
+    if (value === null || level === null ||
+      typeof level === 'undefined' ||
+      typeof value[level] === 'undefined'
+    ) {
       value = undefined;
       return true;
     }
@@ -283,7 +286,8 @@ lighter.ExpressionCompiler.parseKeyLoopExpression = function (exp) {
 lighter.ExpressionCompiler.fillPattern = function (pat, scope) {
   return pat.replace(lighter.ExpressionCompiler.BINDINGS, function (exp) {
     exp = exp.substr(2, exp.length - 4);
-    return lighter.ExpressionCompiler.get(exp, scope) || '';
+    var value = lighter.ExpressionCompiler.get(exp, scope);
+    return (typeof value === 'undefined') ? '' : value;
   });
 };
 
