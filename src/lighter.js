@@ -432,15 +432,23 @@ lighter.widget('@name', function (element, exp, scope) {
     var update = function () {
       var value = lighter.ExpressionCompiler.get(exp, scope);
       if (typeof value === 'undefined' || value === null) {
-        value = '';
+        value = (element.type === 'checkbox') ? false : '';
       }
       if (state !== value) {
-        element.value = value;
+        if (element.type === 'checkbox') {
+          element.checked = Boolean(value);
+        } else {
+          element.value = value;
+        }
         state = value;
       }
     };
 
-    lighter.ExpressionCompiler.set(exp, element.value, scope);
+    if (element.type === 'checkbox') {
+      lighter.ExpressionCompiler.set(exp, element.checked, scope);
+    } else {
+      lighter.ExpressionCompiler.set(exp, element.value, scope);
+    }
     update();
 
     var getValue = function () {
