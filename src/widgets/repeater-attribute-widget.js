@@ -43,8 +43,8 @@ lighter.RepeaterAttributeWidget.prototype.init_ = function () {
   container.innerHTML = '';
 
   if (items) {
-    Array.prototype.forEach.call(items, function (item) {
-      var repeater_scope = this.createItem_(item);
+    Array.prototype.forEach.call(items, function (item, i) {
+      var repeater_scope = this.createItem_(item, i);
       container.appendChild(repeater_scope.$$root);
       state.push([ item, repeater_scope ]);
     }, this);
@@ -61,11 +61,12 @@ lighter.RepeaterAttributeWidget.prototype.init_ = function () {
  * @param {*} item The item data.
  * @return {!lighter.Scope} A repeater scope.
  */
-lighter.RepeaterAttributeWidget.prototype.createItem_ = function (item) {
+lighter.RepeaterAttributeWidget.prototype.createItem_ = function (item, i) {
   var element = this.pattern.cloneNode(true);
 
   var repeater_scope = lighter.scope(element, this.scope);
   repeater_scope[this.target_key] = item;
+  repeater_scope['$i'] = i;
 
   var template = lighter.compile(element, true);
   template(repeater_scope);
@@ -96,7 +97,7 @@ lighter.RepeaterAttributeWidget.prototype.update = function () {
   }
 
   var insertItem = function (i, item) {
-    var repeater_scope = self.createItem_(item);
+    var repeater_scope = self.createItem_(item, i);
     var element = repeater_scope.$$root;
     container.insertBefore(element, container.childNodes[i + 1]);
 
