@@ -489,9 +489,11 @@ lighter.widget('@name', function (element, exp, scope) {
 });
 
 lighter.widget('@lt:click', function (element, exp, scope) {
-  element.onclick = function () {
+  element.onclick = function (e) {
     var fn = lighter.ExpressionCompiler.compile(exp, scope);
+    scope['$event'] = e;
     fn();
+    delete scope['$event'];
     scope.$update();
   };
 });
