@@ -630,3 +630,70 @@ lighter.widget('@lt:drag', function (element, exp, scope) {
     body.addEventListener('mouseup', onmouseup, false);
   }, false);
 });
+
+lighter.widget('@lt:show', function (element, cond, scope) {
+  var Compiler = lighter.ExpressionCompiler;
+  var rx = new RegExp('^' +
+    '(' + Compiler.GETTER_EXPRESSION.source + ')' +
+    '(?:\\s(is|isnt|>|<|==|!=|in|nin)\\s' +
+      '(' +
+        Compiler.GETTER_EXPRESSION.source + '|' +
+        Compiler.STRING.source + '|' +
+        '\\d+' +
+      ')' +
+    ')?' +
+  '$');
+
+  var parts = cond.match(rx);
+  var state = true;
+  var update = function () {
+    var value = Compiler.get(parts[1], scope);
+    var show = false;
+
+    if (typeof parts[2] === 'undefined') {
+      show = Boolean(value);
+
+    } else {
+      var target = Compiler.get(parts[3], scope);
+
+      switch (parts[2]) {
+      case 'is':
+        show = (value === target);
+        console.log(cond, value, target, show, scope)
+        break;
+      case 'isnt':
+        show = (value !== target);
+        break;
+      case '>':
+        show = (value > target);
+        break;
+      case '<':
+        show = (value < target);
+        break;
+      case '==':
+        show = (value == target);
+        break;
+      case '!=':
+        show = (value != target);
+        break;
+      case 'in':
+        show = (target.indexOf(value) !== -1);
+        break;
+      case 'nin':
+        show = (target.indexOf(value) === -1);
+        break;
+      }
+    }
+
+    if (state !== show) {
+      element.style.display = show ? '' : 'none';
+      state = show;
+    }
+  };
+
+  update();
+
+  return {
+    update: update
+  };
+});
