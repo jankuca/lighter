@@ -6,13 +6,21 @@ goog.require('lighter.ExpressionCompiler');
 
 
 /**
- * The expression markup {RegExp}
- * - 1: the expression
+ * The valid filter name syntax
  * @type {RegExp}
  */
-lighter.DOMCompiler.EXPRESSION_MARKUP = new RegExp(
-  '\\{\\{(' + lighter.ExpressionCompiler.GETTER_EXPRESSION.source + ')\\}\\}'
-);
+lighter.DOMCompiler.FILTER_NAME = /[a-zA-Z$][a-zA-Z\-$]*/;
+
+/**
+ * The expression markup {RegExp}
+ * - 1: the expression
+ * - ...: filters
+ * @type {RegExp}
+ */
+lighter.DOMCompiler.EXPRESSION_MARKUP = new RegExp('\\{\\{' +
+  '(' + lighter.ExpressionCompiler.GETTER_EXPRESSION.source + ')' +
+  '(?:\\s*\\|\\s*(' + lighter.DOMCompiler.FILTER_NAME.source + '))*' +
+'\\}\\}');
 
 
 /**
@@ -51,18 +59,21 @@ lighter.DOMCompiler.compileDOM = function (dom) {
 lighter.DOMCompiler.compileTextNode = function (text) {
   var target = text.parentNode;
   var data = text.nodeValue;
-
   var match = data.match(lighter.DOMCompiler.EXPRESSION_MARKUP);
   if (!match) {
     return;
   }
 
   var exp = match[1];
+  var filters = match.slice(2);
   var index = match.index;
 
   // Insert a SPAN element with a lt:bind attribute after the original node
   var element = document.createElement('span');
   element.setAttribute('lt:bind', exp);
+  if (filters.length) {
+    element.setAttribute('lt:filters', filters.join(','));
+  }
   target.insertBefore(element, text.nextSibling);
 
   // Get remaining text

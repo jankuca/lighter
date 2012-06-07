@@ -28,15 +28,22 @@ lighter.running_ = false;
 
 /**
  * A map of registered services
- * @type {Object}
+ * @type {!Object}
  * @private
  */
 lighter.services_ = {};
 
 /**
+ * A map of registered template value filters
+ * @type {!Object}
+ * @private
+ */
+lighter.filters_ = {};
+
+/**
  * An {Array} of registered widget factories
  * - Sorted by priority (highest first)
- * @type {Array.<Object>}
+ * @type {!Array.<!Object>}
  * @private
  */
 lighter.widgets_ = [];
@@ -176,6 +183,23 @@ lighter.service = function (name, Constructor) {
     constructor: Constructor,
     instance: null
   };
+  return null;
+};
+
+/**
+ * Returns or registeres a template value filter
+ * @param {string} name A filter name.
+ * @param {(function(string, !lighter.Scope=): string)=} fn A filter function.
+ * @return {?function(string, !lighter.Scope=): string} The filter function.
+ */
+lighter.filter = function (name, fn) {
+  var filters = lighter.filters_;
+
+  if (arguments.length === 1) {
+    return filters[name] || null;
+  }
+
+  filters[name] = fn;
   return null;
 };
 
@@ -402,13 +426,31 @@ lighter.widget('@lt:view', function (container, key, scope) {
 
 lighter.widget('@lt:bind', function (element, exp, scope) {
   var state = element.textContent;
+
+  var filters;
+  var filter_names = element.getAttribute('lt:filters');
+  if (filter_names) {
+    filters = filter_names.split(',').map(function (name) {
+      var filter = lighter.filter(name);
+      if (!filter) {
+        throw new Error('Unknown filter: ' + name);
+      }
+      return filter;
+    });
+  } else {
+    filters = [];
+  }
+
   var update = function () {
     var value = lighter.ExpressionCompiler.get(exp, scope);
+    filters.forEach(function (filter) {
+      value = filter(value, scope);
+    });
     if (typeof value === 'undefined' || value === null) {
       value = '';
     }
     if (state !== value) {
-      element.textContent = value;
+      element.innerHTML = value;
       state = value;
     }
   };
